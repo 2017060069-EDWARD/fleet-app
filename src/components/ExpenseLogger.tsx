@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '../../lib/supabase'
 import imageCompression from 'browser-image-compression'
 
 export default function ExpenseLogger({ tripId }: { tripId: string }) {
