@@ -16,14 +16,22 @@ const s3 = new S3Client({
 
 export async function POST(request: Request) {
   try {
-    const { filename, contentType } = await request.json()
+    const { filename, contentType, driverName, expenseDate } = await request.json()
 
-    // 1. Sanitize the filename
-    const safeFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
+    // 1. Sanitize inputs for safe path formatting
+    const safeDriver = (driverName || 'unassigned')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_')
+
+    // Use provided date (YYYY-MM-DD) or fallback to current UTC date
+    const safeDate = expenseDate || new Date().toISOString().split('T')[0]
     
-    // 2. Remove 'fleet-app-media/' from the key. 
-    // Use a folder like 'receipts/' or keep it at the bucket root.
-    const key = `receipts/${Date.now()}-${safeFilename}`
+    const safeFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
+
+    // 2. Build the partitioned object key
+    // Output structure: receipts/john_doe/2026-07-27/1785109393707-receipt.jpg
+    const key = `receipts/${safeDriver}/${safeDate}/${Date.now()}-${safeFilename}`
 
     const command = new PutObjectCommand({
       Bucket: 'fleet-app-media',
@@ -37,7 +45,7 @@ export async function POST(request: Request) {
 
     const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`
 
-    return NextResponse.json({ uploadUrl, publicUrl })
+    return NextResponse.json({ uploadUrl, publicUrl, key })
   } catch (error: any) {
     console.error('Presigned URL Error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
