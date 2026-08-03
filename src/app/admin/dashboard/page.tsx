@@ -81,7 +81,6 @@ export default function AdminDashboard() {
         .order('start_time', { ascending: false })
 
       if (tripsData) {
-        // Handle potential array or single object joins from Supabase
         const formattedTrips = tripsData.map((t: any) => ({
           ...t,
           driver: Array.isArray(t.driver) ? t.driver[0] : t.driver,
@@ -90,16 +89,17 @@ export default function AdminDashboard() {
         setActiveTrips(formattedTrips)
       }
 
-      // 2. Fetch Drivers with Traffic Fines
+      // 2. Fetch Drivers with Traffic Fines (Supports 'TRAFFIC_FINE', 'Traffic Fine', etc.)
       const { data: finesData } = await supabase
         .from('trip_expenses')
         .select(`
           amount,
+          category,
           trip:trips!inner(
             driver:profiles!trips_driver_id_fkey(id, full_name)
           )
         `)
-        .eq('category', 'TRAFFIC_FINE')
+        .in('category', ['TRAFFIC_FINE', 'Traffic Fine', 'traffic_fine'])
 
       if (finesData) {
         const finesMap: Record<string, DriverFine> = {}
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
         setServiceTrucks(serviceData as TruckService[])
       }
 
-      // 4. Fetch Fuel Cost per KM
+      // 4. Fetch Fuel Cost per KM (Matches 'Fuel', 'FUEL', etc.)
       const { data: completedTrips } = await supabase
         .from('trips')
         .select(`
@@ -156,7 +156,10 @@ export default function AdminDashboard() {
           const distance = endOdo - startOdo
 
           if (distance > 0) {
-            const fuelExpenses = t.trip_expenses?.filter((e: any) => e.category === 'FUEL') || []
+            const fuelExpenses = t.trip_expenses?.filter(
+              (e: any) => (e.category || '').toUpperCase() === 'FUEL'
+            ) || []
+            
             const totalFuelSpent = fuelExpenses.reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0)
 
             if (totalFuelSpent > 0) {
@@ -197,7 +200,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-white space-y-6">
-      {/* Dashboard Header */}
       <div className="border-b border-slate-800 pb-4 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Fleet Management Dashboard</h1>

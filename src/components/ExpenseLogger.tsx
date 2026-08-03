@@ -147,24 +147,26 @@ export default function ExpenseLogger({ tripId }: ExpenseLoggerProps) {
         </div>
 
         {/* Expense Category */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-800 mb-1">
-            Category
-          </label>
-          <select
-            value={expenseType}
-            onChange={(e) => setExpenseType(e.target.value)}
-            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >
-            <option value="Fuel" className="text-slate-900">Fuel</option>
-            <option value="TRAFFIC_FINE">Traffic Fine</option>
-            <option value="Toll" className="text-slate-900">Toll Gate</option>
-            <option value="Border Post" className="text-slate-900">Border Post</option>
-            <option value="Maintenance" className="text-slate-900">Maintenance / Repair</option>
-            <option value="Driver Allowance" className="text-slate-900">Driver Allowance</option>
-            <option value="Other" className="text-slate-900">Other</option>
-          </select>
-        </div>
+       <div>
+  <label className="block text-sm font-semibold text-slate-800 mb-1">
+    Category
+  </label>
+  <select
+    value={expenseType}
+    onChange={(e) => setExpenseType(e.target.value)}
+    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+  >
+    <option value="FUEL" className="text-slate-900">FUEL</option>
+    <option value="TRAFFIC_FINE" className="text-slate-900">TRAFFIC FINE</option>
+    <option value="TOLL" className="text-slate-900">TOLL</option>
+    <option value="BORDER_POST" className="text-slate-900">BORDER</option>
+    <option value="MAINTENANCE" className="text-slate-900">MAINTENANCE</option>
+    <option value="REPAIRS" className="text-slate-900">REPAIRS</option>
+    <option value="COOL_DRINK" className="text-slate-900">COOL DRINK</option>
+    <option value="FOOD" className="text-slate-900">FOOD</option>
+    <option value="OTHER" className="text-slate-900">OTHER</option>
+  </select>
+</div>
 
         {/* Amount & Currency */}
         <div className="grid grid-cols-3 gap-3">
