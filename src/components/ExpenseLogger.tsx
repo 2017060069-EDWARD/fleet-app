@@ -157,6 +157,7 @@ export default function ExpenseLogger({ tripId }: ExpenseLoggerProps) {
             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             <option value="Fuel" className="text-slate-900">Fuel</option>
+            <option value="TRAFFIC_FINE">Traffic Fine</option>
             <option value="Toll" className="text-slate-900">Toll Gate</option>
             <option value="Border Post" className="text-slate-900">Border Post</option>
             <option value="Maintenance" className="text-slate-900">Maintenance / Repair</option>

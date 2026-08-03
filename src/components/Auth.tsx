@@ -1,18 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-)
+import { supabase } from '@/lib/supabaseClient'
 
 export default function Auth({ onAuthSuccess }: { onAuthSuccess: () => void }) {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [licenseNumber, setLicenseNumber] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -21,25 +18,35 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess: () => void }) {
     setLoading(true)
     setErrorMsg('')
 
+    const cleanEmail = email.trim().toLowerCase()
+
     try {
       if (isSignUp) {
         // Step A: Register in Supabase Auth
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+        })
         if (error) throw error
 
         if (data.user) {
-          // Step B: Create corresponding Driver record in public.drivers table
+          // Step B: Create corresponding Driver record with full profile details
           const { error: profileError } = await supabase.from('drivers').insert([
             {
               id: data.user.id,
-              full_name: fullName,
+              full_name: fullName.trim(),
+              license_number: licenseNumber.trim() || null,
+              phone_number: phoneNumber.trim() || null,
             },
           ])
           if (profileError) throw profileError
         }
       } else {
         // Sign In
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        })
         if (error) throw error
       }
 
@@ -59,21 +66,55 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess: () => void }) {
 
       <form onSubmit={handleAuth} className="space-y-4">
         {isSignUp && (
-          <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="e.g. Sibusiso Khumalo"
-            />
-          </div>
+          <>
+            {/* Full Name */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="e.g. Sibusiso Khumalo"
+              />
+            </div>
+
+            {/* License Number */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 mb-1">
+                Driver License Number
+              </label>
+              <input
+                type="text"
+                required
+                value={licenseNumber}
+                onChange={(e) => setLicenseNumber(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="e.g. DL-987654321"
+              />
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                required
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="e.g. +27 82 123 4567"
+              />
+            </div>
+          </>
         )}
 
+        {/* Email Address */}
         <div>
           <label className="block text-sm font-semibold text-slate-800 mb-1">
             Email Address
@@ -88,6 +129,7 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess: () => void }) {
           />
         </div>
 
+        {/* Password */}
         <div>
           <label className="block text-sm font-semibold text-slate-800 mb-1">
             Password
@@ -102,6 +144,7 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess: () => void }) {
           />
         </div>
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
@@ -117,6 +160,7 @@ export default function Auth({ onAuthSuccess }: { onAuthSuccess: () => void }) {
         )}
       </form>
 
+      {/* Toggle Sign Up / Sign In */}
       <button
         type="button"
         onClick={() => setIsSignUp(!isSignUp)}

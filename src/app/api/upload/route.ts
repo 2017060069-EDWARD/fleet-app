@@ -1,3 +1,4 @@
+// src/app/api/upload/route.ts
 import { NextResponse } from 'next/server'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
@@ -16,22 +17,34 @@ const s3 = new S3Client({
 
 export async function POST(request: Request) {
   try {
-    const { filename, contentType, driverName, expenseDate } = await request.json()
+    const { filename, contentType, driverName, expenseDate, folderPath } = await request.json()
 
-    // 1. Sanitize inputs for safe path formatting
-    const safeDriver = (driverName || 'unassigned')
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '_')
+    if (!filename || !contentType) {
+      return NextResponse.json({ error: 'filename and contentType are required' }, { status: 400 })
+    }
 
-    // Use provided date (YYYY-MM-DD) or fallback to current UTC date
-    const safeDate = expenseDate || new Date().toISOString().split('T')[0]
-    
     const safeFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
+    let key = ''
 
-    // 2. Build the partitioned object key
-    // Output structure: receipts/john_doe/2026-07-27/1785109393707-receipt.jpg
-    const key = `receipts/${safeDriver}/${safeDate}/${Date.now()}-${safeFilename}`
+    if (folderPath) {
+      // 1. Custom Partition Path (e.g. "Trucks/Volvo_FH16/ND_123-456")
+      const safePath = folderPath
+        .split('/')
+        .map((segment: string) => segment.trim().replace(/[^a-zA-Z0-9-_]/g, '_'))
+        .filter(Boolean)
+        .join('/')
+
+      key = `${safePath}/${Date.now()}-${safeFilename}`
+    } else {
+      // 2. Default Receipt Partition Path
+      const safeDriver = (driverName || 'unassigned')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')
+
+      const safeDate = expenseDate || new Date().toISOString().split('T')[0]
+      key = `receipts/${safeDriver}/${safeDate}/${Date.now()}-${safeFilename}`
+    }
 
     const command = new PutObjectCommand({
       Bucket: 'fleet-app-media',
